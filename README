@@ -1,4 +1,13 @@
 # Organization
 xv6 is a shared-memory multi-core system. Initially, all cores will execute the same code `entry.S` which will set up stack. This will transfers control to `start.c`(machine mode) and then transfers control to `main.c`(supervisor mode).
 
+# Pointer arithmetic
+If int *p = (int*)100, then (int)p + 1 and (int)(p + 1) are different numbers: the first is 101 but the second is 104.
 
+Expression Breakdown
+
+- (int)p + 1:
+p is an int* pointer initialized to the address 100. (int)p casts the pointer p to an int. This means it takes the address value 100 and treats it as an integer. (int)p + 1 adds 1 to the integer value 100. Therefore, (int)p + 1 evaluates to 101.
+
+- (int)(p + 1):
+p is an int* pointer initialized to the address 100. p + 1 performs pointer arithmetic. When you add 1 to a pointer, it increments the pointer by the size of the type it points to. Since p is an int* and on most systems, an int is 4 bytes, p + 1 adds 4 to the address. (int)(p + 1) casts the result of p + 1 back to an int. Therefore, (int)(p + 1) evaluates to 104.

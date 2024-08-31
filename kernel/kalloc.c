@@ -11,8 +11,9 @@
 
 void freerange(void *pa_start, void *pa_end);
 
-extern char end[]; // first address after kernel.
+extern char end[]; // first address after kernel. (address of the first usable memory)
                    // defined by kernel.ld.
+                   // `extern` tells compiler that the variable is defined in another file, so will be found at link time
 
 struct run {
   struct run *next;
@@ -20,21 +21,21 @@ struct run {
 
 struct {
   struct spinlock lock;
-  struct run *freelist;
-} kmem;
+  struct run *freelist; // just a linked list of 4096-byte pages
+} kmem; // kmem is an instance of the defined structure
 
 void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  freerange(end, (void*)PHYSTOP);
+  freerange(end, (void*)PHYSTOP); // free all memory from the end of the kernel to the end of the physical memory
 }
 
 void
 freerange(void *pa_start, void *pa_end)
 {
   char *p;
-  p = (char*)PGROUNDUP((uint64)pa_start);
+  p = (char*)PGROUNDUP((uint64)pa_start); // start from the first page-aligned address after pa_start, p is a pointer pointing to a char type data at the address PGROUNDUP((uint64)pa_start)
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
 }
@@ -44,7 +45,7 @@ freerange(void *pa_start, void *pa_end)
 // call to kalloc().  (The exception is when
 // initializing the allocator; see kinit above.)
 void
-kfree(void *pa)
+kfree(void *pa) // this can only free the page at the beginning of the freelist
 {
   struct run *r;
 
@@ -54,7 +55,8 @@ kfree(void *pa)
   // Fill with junk to catch dangling refs.
   memset(pa, 1, PGSIZE);
 
-  r = (struct run*)pa;
+  r = (struct run*)pa; // r is essentially a pointer to an address with value of pa (pa itself is an 64-bit address)
+                       // remember, type casting in C does not change the value of the variable, it just changes the way it is interpreted (type)
 
   acquire(&kmem.lock);
   r->next = kmem.freelist;
@@ -71,7 +73,7 @@ kalloc(void)
   struct run *r;
 
   acquire(&kmem.lock);
-  r = kmem.freelist;
+  r = kmem.freelist; // get the first thing of the freelist
   if(r)
     kmem.freelist = r->next;
   release(&kmem.lock);
