@@ -1,0 +1,4 @@
+# Organization
+xv6 is a shared-memory multi-core system. Initially, all cores will execute the same code `entry.S` which will set up stack. This will transfers control to `start.c`(machine mode) and then transfers control to `main.c`(supervisor mode).
+
+
